@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 
-from utils import load_data, save_data, LEVEL_CAPS
+from utils import load_data, save_data, LEVEL_CAPS, error_response
 
 app = Flask(__name__)
 
@@ -22,15 +22,19 @@ def create_user():
 
     return jsonify({"message": "User created successfully"}), 201
 
-@app.route("/get-user", methods=["GET"])
+@app.route("/login", methods=["GET"])
 def get_user():
     data = load_data()
     login = request.args.get("login")
+    password = request.args.get("password")
 
     if login not in data:
-        return jsonify({"error": "User not found"}), 404
+        return jsonify(error_response("ACCOUNT_DO_NOT_EXIST")), 404
 
-    return jsonify({login: data[login]}), 200
+    if data[login]["password"] != password:
+        return jsonify(error_response("WRONG_PASSWORD")), 404
+
+    return jsonify({"status": "SUCCESS", "user_data": data[login]}), 200
 
 @app.route("/change-password", methods=["PUT"])
 def change_password():
