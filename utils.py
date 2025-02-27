@@ -14,3 +14,6 @@ def load_data():
 def save_data(data):
     with open(FILE_PATH, "w") as file:
         json.dump(data, file, indent=4)
+
+def error_response(error_type: str):
+    return {"status": "ERROR", "error_type": error_type}
