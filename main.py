@@ -11,16 +11,19 @@ def create_user():
     login = request.args.get("login")
     password = request.args.get("password")
 
-    if not login or not password:
-        return jsonify({"error": "Login and password are required"}), 400
+    if len(login) < 5:
+        return jsonify(error_response("USERNAME_TOO_SHORT")), 400
+
+    if len(password) < 8:
+        return jsonify(error_response("PASSWORD_TO_SHORT")), 400
 
     if login in data:
-        return jsonify({"error": "User already exists"}), 400
+        return jsonify(error_response("ACCOUNT_ALREADY_EXISTS")), 400
 
     data[login] = {"password": password, "level": 1.0, "high_score": 0}
     save_data(data)
 
-    return jsonify({"message": "User created successfully"}), 201
+    return jsonify({"status": "SUCCESS"}), 201
 
 @app.route("/login", methods=["GET"])
 def get_user():
@@ -44,18 +47,18 @@ def change_password():
     new_password = request.args.get("new_password")
 
     if login not in data:
-        return jsonify({"error": "User not found"}), 404
+        return jsonify(error_response("ACCOUNT_DO_NOT_EXIST")), 404
 
-    if not new_password:
-        return jsonify({"error": "New password is required"}), 400
+    if not new_password or len(new_password) < 8:
+        return jsonify(error_response("PASSWORD_TOO_WEAK")), 400
 
     if data[login]["password"] != password:
-        return jsonify({"error": "Incorrect password!"}), 400
+        return jsonify(error_response("WRONG_PASSWORD")), 400
 
     data[login]["password"] = new_password
     save_data(data)
 
-    return jsonify({"message": "Password updated successfully"}), 200
+    return jsonify({"status": "SUCCESS"}), 200
 
 @app.route("/provide-result", methods=["PUT"])
 def provide_result():
@@ -64,7 +67,7 @@ def provide_result():
     score = request.args.get("score")
 
     if login not in data:
-        return jsonify({"error": "User not found"}), 404
+        return jsonify(error_response("ACCOUNT_DO_NOT_EXIST")), 404
 
     current_lvl = data[login]["level"]
     current_cap = LEVEL_CAPS[int(current_lvl) - 1]
@@ -72,14 +75,14 @@ def provide_result():
     try:
         score = int(score)
     except TypeError:
-        return jsonify({"error": f"Wrong score format, received {type(score)} when needed int"})
+        return jsonify(error_response("WRONG_FORMAT"))
 
     data[login]["high_score"] = max(score, data[login]["high_score"])
     data[login]["level"] += score / current_cap
 
     save_data(data)
 
-    return jsonify({"message": "Profile results updated successfully"}), 200
+    return jsonify({"status": "SUCCESS"}), 200
 
 @app.route("/delete-user", methods=["DELETE"])
 def delete_user():
@@ -88,18 +91,18 @@ def delete_user():
     password = request.args.get("password")
 
     if not login or not password:
-        return jsonify({"error": "Login and password are required"}), 400
+        return jsonify(error_response("INCORRECT_CREDENTIALS")), 400
 
     if login not in data:
-        return jsonify({"error": "User not found"}), 404
+        return jsonify(error_response("ACCOUNT_DO_NOT_EXIST")), 404
 
     if data[login]["password"] != password:
-        return jsonify({"error": "Incorrect password"}), 403
+        return jsonify(error_response("INCORRECT_CREDENTIALS")), 403
 
     del data[login]
     save_data(data)
 
-    return jsonify({"message": "User deleted successfully"}), 200
+    return jsonify({"status": "SUCCESS"}), 200
 
 
 
