@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify
-
+from flask_cors import CORS
 from utils import load_data, save_data, LEVEL_CAPS, error_response
 
 app = Flask(__name__)
-
+CORS(app)
 
 @app.route("/create-user", methods=["POST"])
 def create_user():
